@@ -1,3 +1,5 @@
+// Base path for GitHub Pages
+const BASE_PATH = '/kelanaharamain';
 // Lightweight SPA Router
 class Router {
   constructor() {
@@ -13,7 +15,7 @@ class Router {
 
   navigate(path, pushState = true) {
     if (pushState) {
-      window.history.pushState(null, '', path);
+      window.history.pushState(null, '', BASE_PATH + path);
     }
     this.currentRoute = path;
     const handler = this.routes[path] || this.routes['/'];
@@ -26,7 +28,7 @@ class Router {
 
   updateActiveLinks() {
     document.querySelectorAll('[data-link]').forEach(link => {
-      link.classList.toggle('active', link.getAttribute('href') === this.currentRoute);
+      const href = link.getAttribute('href'); link.classList.toggle('active', href === this.currentRoute || href === BASE_PATH + this.currentRoute);
     });
   }
 
@@ -42,7 +44,9 @@ class Router {
     });
 
     // Navigate to current URL
-    this.navigate(window.location.pathname, false);
+    const fullPath = window.location.pathname;
+    const path = fullPath.startsWith(BASE_PATH) ? fullPath.slice(BASE_PATH.length) || '/' : fullPath;
+    this.navigate(path, false);
   }
 }
 

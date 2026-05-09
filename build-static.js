@@ -75,7 +75,52 @@ async function build() {
   fs.writeFileSync(path.join(DIST_DIR, '.nojekyll'), '');
   console.log('✅ Created .nojekyll');
 
+  // Fix paths for GitHub Pages subdirectory
+  // GitHub Pages serves from: https://username.github.io/repo-name/
+  const BASE_PATH = '/kelanaharamain';
+  
+  // Fix index.html paths
+  let indexContent = fs.readFileSync(path.join(DIST_DIR, 'index.html'), 'utf-8');
+  indexContent = indexContent
+    .replace('href="/styles/main.css" as="style"', `href="${BASE_PATH}/styles/main.css" as="style"`)
+    .replace('href="/styles/main.css">', `href="${BASE_PATH}/styles/main.css">`)
+    .replace('href="/images/favicon.svg"', `href="${BASE_PATH}/images/favicon.svg"`)
+    .replace('src="/js/app.js"', `src="${BASE_PATH}/js/app.js"`)
+    .replace('</head>', `  <meta name="api-base" content="${BASE_PATH}">\n</head>`);
+  fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexContent);
+  fs.writeFileSync(path.join(DIST_DIR, '404.html'), indexContent);
+  console.log('✅ Fixed paths for GitHub Pages subdirectory');
+
+  // Fix app.js to use base path for script loading
+  let appJs = fs.readFileSync(path.join(DIST_DIR, 'js', 'app.js'), 'utf-8');
+  appJs = appJs.replace("script.src = `/js/${src}`;", `script.src = '${BASE_PATH}/js/' + src;`);
+  fs.writeFileSync(path.join(DIST_DIR, 'js', 'app.js'), appJs);
+  console.log('✅ Fixed app.js script loader paths');
+
+  // Fix router.js to use base path
+  let routerJs = fs.readFileSync(path.join(DIST_DIR, 'js', 'router.js'), 'utf-8');
+  routerJs = `// Base path for GitHub Pages
+const BASE_PATH = '${BASE_PATH}';
+` + routerJs
+    .replace(
+      "window.history.pushState(null, '', path);",
+      "window.history.pushState(null, '', BASE_PATH + path);"
+    )
+    .replace(
+      "this.navigate(window.location.pathname, false);",
+      `const fullPath = window.location.pathname;
+    const path = fullPath.startsWith(BASE_PATH) ? fullPath.slice(BASE_PATH.length) || '/' : fullPath;
+    this.navigate(path, false);`
+    )
+    .replace(
+      "link.classList.toggle('active', link.getAttribute('href') === this.currentRoute);",
+      "const href = link.getAttribute('href'); link.classList.toggle('active', href === this.currentRoute || href === BASE_PATH + this.currentRoute);"
+    );
+  fs.writeFileSync(path.join(DIST_DIR, 'js', 'router.js'), routerJs);
+  console.log('✅ Fixed router.js for GitHub Pages');
+
   console.log('\n🎉 Build complete! Files are in /docs folder.');
+  console.log(`📌 Site will be available at: https://micokelana.github.io${BASE_PATH}/`);
   console.log('📌 Enable GitHub Pages from Settings > Pages > Source: Deploy from branch > /docs');
 }
 
