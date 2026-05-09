@@ -1,0 +1,17 @@
+{
+  "name": "kelana-haramain",
+  "version": "1.0.0",
+  "description": "Kelana Haramain - Travel Umroh & Haji Website",
+  "private": true,
+  "scripts": {
+    "dev:backend": "node backend/src/server.js",
+    "dev:frontend": "node frontend/dev-server.js",
+    "build": "node frontend/build.js",
+    "start": "node backend/src/server.js",
+    "db:init": "node backend/database/init.js",
+    "db:seed": "node backend/database/seed.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
